@@ -36,6 +36,8 @@
   .reply-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
   .reply-label { font-size: 11px; color: #16a34a; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
   .reply-text { font-size: 14px; color: #15803d; line-height: 1.6; font-style: italic; }
+  .meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .meta-tag { padding: 3px 10px; border-radius: 20px; font-size: 11px; background: #f3f4f6; color: #6b7280; }
   .actions { display: flex; gap: 8px; }
   .btn-approve { flex: 1; padding: 10px; background: #16a34a; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
   .btn-approve:hover { background: #15803d; }
@@ -72,7 +74,6 @@
 <script>
 const N8N_URL = 'https://primary-production-72d4.up.railway.app';
 const PROXY = 'https://corsproxy.io/?';
-
 let apiKey = '';
 
 window.onload = function() {
@@ -97,6 +98,41 @@ function saveAndLoad() {
   loadExecutions();
 }
 
+function extractData(exec) {
+  try {
+    const runData = exec.data?.resultData?.runData;
+    if (!runData) return null;
+
+    // Buscar en todas las posibles rutas
+    const nodeNames = ['Procesar Respuesta Claude', 'Process Claude Response'];
+    for (const nodeName of nodeNames) {
+      const nodeData = runData[nodeName];
+      if (!nodeData) continue;
+      for (const attempt of nodeData) {
+        const items = attempt?.data?.main?.[0];
+        if (!items) continue;
+        for (const item of items) {
+          const json = item?.json;
+          if (json && json.comment_text) return json;
+        }
+      }
+    }
+
+    // Buscar en cualquier nodo que tenga comment_text
+    for (const nodeName of Object.keys(runData)) {
+      const nodeData = runData[nodeName];
+      for (const attempt of nodeData) {
+        const items = attempt?.data?.main?.[0];
+        if (!items) continue;
+        for (const item of items) {
+          if (item?.json?.comment_text) return item.json;
+        }
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+
 async function loadExecutions() {
   const statusArea = document.getElementById('status-area');
   const execArea = document.getElementById('executions-area');
@@ -110,12 +146,9 @@ async function loadExecutions() {
   execArea.innerHTML = '';
 
   try {
-    const url = `${N8N_URL}/api/v1/executions?status=waiting&limit=20`;
+    const url = `${N8N_URL}/api/v1/executions?status=waiting&limit=20&includeData=true`;
     const res = await fetch(PROXY + encodeURIComponent(url), {
-      headers: {
-        'X-N8N-API-KEY': apiKey,
-        'x-requested-with': 'XMLHttpRequest'
-      }
+      headers: { 'X-N8N-API-KEY': apiKey, 'x-requested-with': 'XMLHttpRequest' }
     });
 
     if (!res.ok) throw new Error(`Error ${res.status} — verifica tu API key`);
@@ -124,19 +157,21 @@ async function loadExecutions() {
     const executions = data.data || [];
 
     if (executions.length === 0) {
-      statusArea.innerHTML = '<div class="status empty">✅ No hay comentarios pendientes ahora mismo. El sistema revisará automáticamente cada 30 minutos.</div>';
+      statusArea.innerHTML = '<div class="status empty">✅ No hay comentarios pendientes ahora mismo. El sistema revisa cada 30 minutos.</div>';
       return;
     }
 
     statusArea.innerHTML = `<div class="status loading">💬 ${executions.length} comentario(s) esperando tu aprobación</div>`;
 
     execArea.innerHTML = executions.map(exec => {
-      const runData = exec.data?.resultData?.runData;
-      const parsed = runData?.['Procesar Respuesta Claude']?.[0]?.data?.main?.[0]?.[0]?.json;
+      const parsed = extractData(exec);
       const isLead = parsed?.es_lead || false;
-      const commentText = parsed?.comment_text || 'Comentario no disponible';
-      const replyText = parsed?.respuesta_sugerida || 'Respuesta no disponible';
+      const commentText = parsed?.comment_text || 'Cargando...';
+      const replyText = parsed?.respuesta_sugerida || 'Cargando...';
       const author = parsed?.author || 'Usuario de YouTube';
+      const sentiment = parsed?.sentiment || '';
+      const categoria = parsed?.categoria || '';
+      const prioridad = parsed?.prioridad || '';
       const time = new Date(exec.startedAt).toLocaleString('es-CO');
 
       return `
@@ -149,6 +184,11 @@ async function loadExecutions() {
             <span class="badge ${isLead ? 'badge-lead' : 'badge-normal'}">${isLead ? '🔥 Lead Caliente' : 'Comentario Normal'}</span>
           </div>
           <div class="exec-body">
+            <div class="meta-row">
+              ${sentiment ? `<span class="meta-tag">😊 ${sentiment}</span>` : ''}
+              ${categoria ? `<span class="meta-tag">📁 ${categoria}</span>` : ''}
+              ${prioridad ? `<span class="meta-tag">⚡ prioridad ${prioridad}</span>` : ''}
+            </div>
             <div class="comment-box">
               <div class="comment-label">Comentario recibido</div>
               <div class="comment-text">${commentText}</div>
@@ -178,14 +218,12 @@ async function respond(execId, action, btn) {
   btn.textContent = action === 'aprobar' ? '⏳ Publicando...' : '⏳ Procesando...';
 
   try {
-    const webhookUrl = `${N8N_URL}/webhook-waiting/${execId}?response=${action}`;
-    const res = await fetch(PROXY + encodeURIComponent(webhookUrl));
-
+    const webhookUrl = `${N8N_URL}/webhook-waiting/${execId}&response=${action}`;
+    await fetch(PROXY + encodeURIComponent(webhookUrl));
     card.innerHTML = `<div style="padding:20px;text-align:center;color:${action === 'aprobar' ? '#16a34a' : '#6b7280'};font-weight:600;font-size:15px">
       ${action === 'aprobar' ? '✅ Respuesta publicada en YouTube' : '⏭ Comentario ignorado'}
     </div>`;
     setTimeout(() => card.remove(), 2000);
-
   } catch(e) {
     buttons.forEach(b => b.disabled = false);
     btn.textContent = action === 'aprobar' ? '✅ Aprobar y publicar' : '⏭ Ignorar';
