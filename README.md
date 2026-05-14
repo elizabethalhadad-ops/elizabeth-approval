@@ -3,234 +3,729 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel de Aprobación — Elizabeth Alhadad</title>
+<title>Elizabeth Alhadad — Aprobación de Comentarios</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #2e2e2e;
+    --accent: #e8c97a;
+    --accent2: #7ac9e8;
+    --text: #f0f0f0;
+    --text2: #888;
+    --text3: #555;
+    --red: #e87a7a;
+    --green: #7ae8a4;
+    --radius: 10px;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; min-height: 100vh; }
-  .header { background: #1a1a2e; color: white; padding: 16px 20px; }
-  .header h1 { font-size: 18px; font-weight: 600; }
-  .header p { font-size: 12px; opacity: 0.7; margin-top: 2px; }
-  .config { background: white; border-bottom: 1px solid #e5e7eb; padding: 16px 20px; }
-  .config label { font-size: 12px; font-weight: 600; color: #6b7280; display: block; margin-bottom: 6px; }
-  .config-row { display: flex; gap: 10px; align-items: center; }
-  .config input { flex: 1; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; font-family: monospace; }
-  .config button { padding: 10px 20px; background: #1a1a2e; color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
-  .config button:hover { background: #2d2d4e; }
-  .container { max-width: 800px; margin: 20px auto; padding: 0 16px; }
-  .status { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
-  .status.loading { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-  .status.error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-  .status.empty { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-  .status.info { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
-  .execution-card { background: white; border-radius: 12px; border: 1px solid #e5e7eb; margin-bottom: 12px; overflow: hidden; }
-  .exec-header { padding: 14px 16px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .exec-title { font-size: 14px; font-weight: 600; color: #111827; }
-  .exec-time { font-size: 11px; color: #9ca3af; }
-  .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-  .badge-lead { background: #fee2e2; color: #dc2626; }
-  .badge-normal { background: #eff6ff; color: #2563eb; }
-  .exec-body { padding: 14px 16px; }
-  .comment-box { background: #f9fafb; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-  .comment-label { font-size: 11px; color: #6b7280; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
-  .comment-text { font-size: 14px; color: #111827; line-height: 1.6; }
-  .reply-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-  .reply-label { font-size: 11px; color: #16a34a; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
-  .reply-text { font-size: 14px; color: #15803d; line-height: 1.6; font-style: italic; }
-  .meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .meta-tag { padding: 3px 10px; border-radius: 20px; font-size: 11px; background: #f3f4f6; color: #6b7280; }
-  .actions { display: flex; gap: 8px; }
-  .btn-approve { flex: 1; padding: 10px; background: #16a34a; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .btn-approve:hover { background: #15803d; }
-  .btn-ignore { flex: 1; padding: 10px; background: #6b7280; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .btn-ignore:hover { background: #4b5563; }
-  .btn-approve:disabled, .btn-ignore:disabled { opacity: 0.5; cursor: not-allowed; }
-  .refresh-btn { display: block; width: 100%; padding: 12px; background: white; border: 1px dashed #e5e7eb; border-radius: 10px; color: #6b7280; font-size: 13px; cursor: pointer; text-align: center; margin-bottom: 16px; }
-  .refresh-btn:hover { background: #f9fafb; }
-  .tip { font-size: 11px; color: #9ca3af; margin-top: 8px; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 16px;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 14px; color: #000;
+    flex-shrink: 0;
+  }
+  .header h1 { font-size: 15px; font-weight: 600; color: var(--text); }
+  .header p { font-size: 12px; color: var(--text2); }
+
+  /* CONFIG BAR */
+  .config-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .config-bar input {
+    flex: 1;
+    min-width: 240px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .config-bar input:focus { border-color: var(--accent); }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* STATS */
+  .stats-row {
+    display: flex;
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat {
+    flex: 1;
+    background: var(--surface);
+    padding: 14px 20px;
+    text-align: center;
+  }
+  .stat .val {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+    transition: color 0.3s;
+  }
+  .stat .lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .stat.pending .val { color: var(--accent); }
+  .stat.approved .val { color: var(--green); }
+  .stat.ignored .val { color: var(--text3); }
+
+  /* MAIN */
+  .main { max-width: 760px; margin: 0 auto; padding: 20px 16px; }
+
+  /* STATUS MESSAGE */
+  .status-msg {
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    margin-bottom: 16px;
+    border: 1px solid;
+    display: none;
+  }
+  .status-msg.info { background: #1a2535; border-color: #2a4060; color: var(--accent2); display: block; }
+  .status-msg.error { background: #2a1515; border-color: #5a2a2a; color: var(--red); display: block; }
+  .status-msg.success { background: #152a1f; border-color: #2a5a3f; color: var(--green); display: block; }
+
+  /* EMPTY STATE */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+  }
+  .empty .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty p { font-size: 13px; }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .card:hover { border-color: #3e3e3e; }
+  .card.approved { border-color: #2a4a35; background: #141f18; }
+  .card.ignored { opacity: 0.45; }
+
+  .card-header {
+    padding: 14px 16px 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; flex-shrink: 0;
+    background: var(--surface2);
+    color: var(--text2);
+  }
+  .card-meta { flex: 1; min-width: 0; }
+  .card-author { font-weight: 600; font-size: 13px; color: var(--text); }
+  .card-time { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+  /* VIDEO BADGE */
+  .video-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: var(--accent2);
+    text-decoration: none;
+    margin-top: 6px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .video-badge:hover { border-color: var(--accent2); background: #1a2535; }
+  .video-badge svg { flex-shrink: 0; }
+
+  .card-body { padding: 0 16px 14px 60px; }
+  .comment-text {
+    font-size: 13.5px;
+    color: var(--text);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  /* SUGGESTED REPLY */
+  .reply-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  .reply-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .reply-text {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.5;
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: vertical;
+    min-height: 52px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+  }
+
+  /* ACTIONS */
+  .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-approve {
+    background: var(--green);
+    color: #000;
+    border: none;
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-approve:hover { opacity: 0.8; }
+  .btn-approve:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-ignore {
+    background: transparent;
+    color: var(--text3);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-ignore:hover { border-color: var(--text3); color: var(--text2); }
+  .approved-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #1a3025;
+    color: var(--green);
+    border-radius: 7px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .ignored-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--text3);
+    font-size: 12px;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 13px;
+    color: var(--text);
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 999;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* REFRESH INDICATOR */
+  .refresh-info {
+    font-size: 11px;
+    color: var(--text3);
+    padding: 0 0 12px;
+    text-align: right;
+  }
+
+  @media (max-width: 500px) {
+    .stats-row { flex-wrap: wrap; }
+    .stat { min-width: 50%; }
+    .card-body { padding-left: 16px; }
+  }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>Panel de Aprobación YouTube</h1>
-  <p>@ElizabethAlhadad — Real Estate Agent</p>
-</div>
-
-<div class="config">
-  <label>N8N API KEY (se guarda solo en tu navegador)</label>
-  <div class="config-row">
-    <input type="text" id="api-key-input" placeholder="Pega aquí tu n8n API key completa..." autocomplete="off" />
-    <button onclick="saveAndLoad()">Cargar</button>
+  <div class="header-left">
+    <div class="logo">EA</div>
+    <div>
+      <h1>@ElizabethAlhadad</h1>
+      <p>Panel de aprobación de comentarios</p>
+    </div>
   </div>
-  <p class="tip">La key se guarda en tu navegador. No se envía a ningún servidor externo.</p>
 </div>
 
-<div class="container">
-  <button class="refresh-btn" onclick="loadExecutions()">🔄 Actualizar</button>
-  <div id="status-area"></div>
-  <div id="executions-area"></div>
+<div class="config-bar">
+  <input type="password" id="apiKeyInput" placeholder="n8n API key (ej: eyJhbG...)" autocomplete="off" />
+  <input type="text" id="n8nUrlInput" placeholder="URL de n8n (ej: https://tu-instancia.railway.app)" />
+  <button class="btn-primary" id="loadBtn" onclick="loadComments()">Cargar comentarios</button>
 </div>
+
+<div class="stats-row">
+  <div class="stat pending">
+    <span class="val" id="stat-pending">—</span>
+    <div class="lbl">Pendientes</div>
+  </div>
+  <div class="stat approved">
+    <span class="val" id="stat-approved">—</span>
+    <div class="lbl">Aprobados</div>
+  </div>
+  <div class="stat ignored">
+    <span class="val" id="stat-ignored">—</span>
+    <div class="lbl">Ignorados</div>
+  </div>
+  <div class="stat">
+    <span class="val" id="stat-total">—</span>
+    <div class="lbl">Total</div>
+  </div>
+</div>
+
+<div class="main">
+  <div id="statusMsg" class="status-msg"></div>
+  <div class="refresh-info" id="refreshInfo" style="display:none"></div>
+  <div id="commentList"></div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-const N8N_URL = 'https://primary-production-72d4.up.railway.app';
-const PROXY = 'https://corsproxy.io/?';
-let apiKey = '';
+// ─── Estado global ───────────────────────────────────────────────────────────
+// KEY: usamos Map con commentId como clave para evitar duplicados
+const commentsMap = new Map(); // commentId → { data, status, suggestedReply }
+const STORAGE_KEY = 'ea_approval_state';
 
-window.onload = function() {
-  const saved = localStorage.getItem('ea_n8n_key');
-  if (saved) {
-    apiKey = saved;
-    document.getElementById('api-key-input').value = saved;
-    loadExecutions();
-  } else {
-    document.getElementById('status-area').innerHTML = '<div class="status info">👆 Pega tu n8n API key arriba y haz clic en Cargar</div>';
-  }
-};
-
-function saveAndLoad() {
-  const input = document.getElementById('api-key-input').value.trim();
-  if (!input) {
-    document.getElementById('status-area').innerHTML = '<div class="status error">Por favor pega tu API key primero</div>';
-    return;
-  }
-  apiKey = input;
-  localStorage.setItem('ea_n8n_key', apiKey);
-  loadExecutions();
+// ─── Persistencia local ───────────────────────────────────────────────────────
+function saveState() {
+  try {
+    const obj = {};
+    commentsMap.forEach((val, key) => { obj[key] = val; });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+  } catch(e) {}
 }
 
-function extractData(exec) {
+function loadState() {
   try {
-    const runData = exec.data?.resultData?.runData;
-    if (!runData) return null;
-
-    // Buscar en todas las posibles rutas
-    const nodeNames = ['Procesar Respuesta Claude', 'Process Claude Response'];
-    for (const nodeName of nodeNames) {
-      const nodeData = runData[nodeName];
-      if (!nodeData) continue;
-      for (const attempt of nodeData) {
-        const items = attempt?.data?.main?.[0];
-        if (!items) continue;
-        for (const item of items) {
-          const json = item?.json;
-          if (json && json.comment_text) return json;
-        }
-      }
-    }
-
-    // Buscar en cualquier nodo que tenga comment_text
-    for (const nodeName of Object.keys(runData)) {
-      const nodeData = runData[nodeName];
-      for (const attempt of nodeData) {
-        const items = attempt?.data?.main?.[0];
-        if (!items) continue;
-        for (const item of items) {
-          if (item?.json?.comment_text) return item.json;
-        }
-      }
-    }
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const obj = JSON.parse(raw);
+    Object.keys(obj).forEach(k => commentsMap.set(k, obj[k]));
   } catch(e) {}
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function getApiKey() { return document.getElementById('apiKeyInput').value.trim(); }
+function getN8nUrl() {
+  let url = document.getElementById('n8nUrlInput').value.trim();
+  return url.endsWith('/') ? url.slice(0,-1) : url;
+}
+
+function showStatus(msg, type = 'info') {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.className = 'status-msg ' + type;
+}
+function hideStatus() {
+  document.getElementById('statusMsg').className = 'status-msg';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── Extrae comment ID único del objeto del webhook ──────────────────────────
+function extractCommentId(item) {
+  // n8n puede enviar el id en diferentes rutas según el nodo
+  return item.commentId
+    || item.comment_id
+    || item.id
+    || (item.snippet && item.snippet.topLevelComment && item.snippet.topLevelComment.id)
+    || (item.json && (item.json.commentId || item.json.comment_id || item.json.id))
+    || null;
+}
+
+// ─── Extrae video_id y construye link ────────────────────────────────────────
+function extractVideoId(item) {
+  return item.videoId
+    || item.video_id
+    || (item.snippet && item.snippet.videoId)
+    || (item.json && (item.json.videoId || item.json.video_id))
+    || null;
+}
+
+function extractVideoTitle(item) {
+  return item.videoTitle
+    || item.video_title
+    || (item.json && (item.json.videoTitle || item.json.video_title))
+    || null;
+}
+
+// ─── Parsea el cuerpo del comentario desde múltiples rutas ──────────────────
+function extractField(item, ...keys) {
+  for (const key of keys) {
+    if (item[key]) return item[key];
+    if (item.json && item.json[key]) return item.json[key];
+    if (item.snippet) {
+      const s = item.snippet;
+      if (s[key]) return s[key];
+      if (s.topLevelComment && s.topLevelComment.snippet && s.topLevelComment.snippet[key]) {
+        return s.topLevelComment.snippet[key];
+      }
+    }
+  }
   return null;
 }
 
-async function loadExecutions() {
-  const statusArea = document.getElementById('status-area');
-  const execArea = document.getElementById('executions-area');
+function parseComment(item) {
+  return {
+    id: extractCommentId(item),
+    author: extractField(item, 'authorDisplayName', 'author', 'authorName') || 'Anónimo',
+    text: extractField(item, 'textDisplay', 'textOriginal', 'comment', 'text', 'body') || '',
+    videoId: extractVideoId(item),
+    videoTitle: extractVideoTitle(item),
+    suggestedReply: extractField(item, 'suggestedReply', 'suggested_reply', 'reply', 'respuestaSugerida') || '',
+    publishedAt: extractField(item, 'publishedAt', 'published_at', 'createdAt', 'fecha') || null,
+    executionId: item.executionId || item.execution_id || null,
+  };
+}
 
-  if (!apiKey) {
-    statusArea.innerHTML = '<div class="status info">👆 Pega tu n8n API key arriba y haz clic en Cargar</div>';
+// ─── Actualiza contadores ────────────────────────────────────────────────────
+function updateStats() {
+  let pending = 0, approved = 0, ignored = 0;
+  commentsMap.forEach(c => {
+    if (c.status === 'pending') pending++;
+    else if (c.status === 'approved') approved++;
+    else if (c.status === 'ignored') ignored++;
+  });
+  const total = commentsMap.size;
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-approved').textContent = approved;
+  document.getElementById('stat-ignored').textContent = ignored;
+  document.getElementById('stat-total').textContent = total;
+}
+
+// ─── Renderiza la lista ──────────────────────────────────────────────────────
+function renderList() {
+  const container = document.getElementById('commentList');
+  if (commentsMap.size === 0) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="icon">📭</div>
+        <p>No hay comentarios cargados.<br>Ingresa tu API key y URL de n8n y pulsa <strong>Cargar comentarios</strong>.</p>
+      </div>`;
     return;
   }
 
-  statusArea.innerHTML = '<div class="status loading">⏳ Cargando comentarios pendientes...</div>';
-  execArea.innerHTML = '';
+  // Mostrar pendientes primero, luego aprobados, luego ignorados
+  const sorted = [...commentsMap.values()].sort((a, b) => {
+    const order = { pending: 0, approved: 1, ignored: 2 };
+    return (order[a.status] ?? 3) - (order[b.status] ?? 3);
+  });
+
+  container.innerHTML = sorted.map(c => buildCard(c)).join('');
+}
+
+function buildCard(c) {
+  const initials = c.author.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  const colors = ['#3a4a6a','#4a3a6a','#3a6a4a','#6a4a3a','#4a6a3a'];
+  const colorIdx = (c.id || '').split('').reduce((a, ch) => a + ch.charCodeAt(0), 0) % colors.length;
+  const bgColor = colors[colorIdx];
+
+  let videoBadge = '';
+  if (c.videoId) {
+    const title = c.videoTitle ? c.videoTitle : c.videoId;
+    const shortTitle = title.length > 45 ? title.slice(0, 42) + '…' : title;
+    videoBadge = `
+      <a class="video-badge" href="https://www.youtube.com/watch?v=${c.videoId}" target="_blank" rel="noopener">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-2.7A4.83 4.83 0 0 0 12 2a4.83 4.83 0 0 0-3.82 2A4.83 4.83 0 0 1 4.41 6.69 4.83 4.83 0 0 0 2 10.51a4.83 4.83 0 0 0 2.41 3.82 4.83 4.83 0 0 1 0 4.64A4.83 4.83 0 0 0 2 22.79h.1a4.83 4.83 0 0 0 4-2.07 4.83 4.83 0 0 1 3.9-2 4.83 4.83 0 0 1 3.9 2 4.83 4.83 0 0 0 4 2.07h.1a4.83 4.83 0 0 0-.41-4.32 4.83 4.83 0 0 1 0-4.64A4.83 4.83 0 0 0 22 10.51a4.83 4.83 0 0 0-2.41-3.82z"/>
+        </svg>
+        ${shortTitle}
+      </a>`;
+  }
+
+  const timeStr = c.publishedAt ? new Date(c.publishedAt).toLocaleString('es-CO', { dateStyle:'short', timeStyle:'short' }) : '';
+
+  let actionsHtml = '';
+  if (c.status === 'pending') {
+    actionsHtml = `
+      <button class="btn-approve" onclick="approveComment('${c.id}')">✅ Aprobar y publicar</button>
+      <button class="btn-ignore" onclick="ignoreComment('${c.id}')">Ignorar</button>`;
+  } else if (c.status === 'approved') {
+    actionsHtml = `<div class="approved-tag">✅ Publicado</div>`;
+  } else if (c.status === 'ignored') {
+    actionsHtml = `<div class="ignored-tag">⏭ Ignorado</div>`;
+  }
+
+  const replyHtml = c.suggestedReply ? `
+    <div class="reply-box">
+      <div class="reply-label">✦ Respuesta sugerida</div>
+      <textarea class="reply-text" id="reply_${c.id}" rows="2">${c.suggestedReply}</textarea>
+    </div>` : '';
+
+  return `
+    <div class="card ${c.status !== 'pending' ? c.status : ''}" id="card_${c.id}">
+      <div class="card-header">
+        <div class="avatar" style="background:${bgColor}">${initials}</div>
+        <div class="card-meta">
+          <div class="card-author">${escHtml(c.author)}</div>
+          ${timeStr ? `<div class="card-time">${timeStr}</div>` : ''}
+          ${videoBadge}
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="comment-text">${escHtml(c.text)}</div>
+        ${replyHtml}
+        <div class="card-actions">${actionsHtml}</div>
+      </div>
+    </div>`;
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Cargar comentarios desde n8n ────────────────────────────────────────────
+async function loadComments() {
+  const key = getApiKey();
+  const baseUrl = getN8nUrl();
+  if (!key || !baseUrl) {
+    showStatus('⚠️ Ingresa tu API key y la URL de n8n.', 'error');
+    return;
+  }
+  localStorage.setItem('ea_n8n_key', key);
+  localStorage.setItem('ea_n8n_url', baseUrl);
+
+  const btn = document.getElementById('loadBtn');
+  btn.disabled = true;
+  btn.textContent = 'Cargando…';
+  showStatus('Conectando con n8n…', 'info');
 
   try {
-    const url = `${N8N_URL}/api/v1/executions?status=waiting&limit=20&includeData=true`;
-    const res = await fetch(PROXY + encodeURIComponent(url), {
-      headers: { 'X-N8N-API-KEY': apiKey, 'x-requested-with': 'XMLHttpRequest' }
+    // Traer ejecuciones recientes del workflow
+    const resp = await fetch(`${baseUrl}/api/v1/executions?limit=50&status=success`, {
+      headers: {
+        'X-N8N-API-KEY': key,
+        'Accept': 'application/json'
+      }
     });
 
-    if (!res.ok) throw new Error(`Error ${res.status} — verifica tu API key`);
+    if (!resp.ok) throw new Error(`Error ${resp.status}: ${resp.statusText}`);
+    const data = await resp.json();
 
-    const data = await res.json();
-    const executions = data.data || [];
+    const executions = data.data || data.results || data || [];
+    let newCount = 0;
 
-    if (executions.length === 0) {
-      statusArea.innerHTML = '<div class="status empty">✅ No hay comentarios pendientes ahora mismo. El sistema revisa cada 30 minutos.</div>';
-      return;
+    for (const exec of executions) {
+      // Extraer comentarios del resultado de la ejecución
+      const resultData = exec.data?.resultData?.runData;
+      if (!resultData) continue;
+
+      // Buscar en todos los nodos del resultado
+      for (const nodeName of Object.keys(resultData)) {
+        const nodeResults = resultData[nodeName];
+        if (!Array.isArray(nodeResults)) continue;
+
+        for (const run of nodeResults) {
+          const items = run?.data?.main?.[0] || [];
+          for (const item of items) {
+            const parsed = parseComment(item.json || item);
+            if (!parsed.id) continue; // Sin ID no podemos deduplicar
+
+            if (!commentsMap.has(parsed.id)) {
+              commentsMap.set(parsed.id, { ...parsed, status: 'pending' });
+              newCount++;
+            }
+            // Si ya existe, no lo sobreescribimos (preserva estado aprobado/ignorado)
+          }
+        }
+      }
     }
 
-    statusArea.innerHTML = `<div class="status loading">💬 ${executions.length} comentario(s) esperando tu aprobación</div>`;
+    saveState();
+    updateStats();
+    renderList();
 
-    execArea.innerHTML = executions.map(exec => {
-      const parsed = extractData(exec);
-      const isLead = parsed?.es_lead || false;
-      const commentText = parsed?.comment_text || 'Cargando...';
-      const replyText = parsed?.respuesta_sugerida || 'Cargando...';
-      const author = parsed?.author || 'Usuario de YouTube';
-      const sentiment = parsed?.sentiment || '';
-      const categoria = parsed?.categoria || '';
-      const prioridad = parsed?.prioridad || '';
-      const time = new Date(exec.startedAt).toLocaleString('es-CO');
+    const total = commentsMap.size;
+    if (newCount > 0) {
+      showStatus(`✓ ${newCount} comentario${newCount > 1 ? 's' : ''} nuevo${newCount > 1 ? 's' : ''} — ${total} en total.`, 'success');
+    } else if (total > 0) {
+      showStatus(`✓ Sin nuevos comentarios. ${total} cargados.`, 'success');
+    } else {
+      showStatus('No se encontraron comentarios en las ejecuciones recientes.', 'info');
+    }
 
-      return `
-        <div class="execution-card" id="card-${exec.id}">
-          <div class="exec-header">
-            <div>
-              <div class="exec-title">💬 ${author}</div>
-              <div class="exec-time">${time}</div>
-            </div>
-            <span class="badge ${isLead ? 'badge-lead' : 'badge-normal'}">${isLead ? '🔥 Lead Caliente' : 'Comentario Normal'}</span>
-          </div>
-          <div class="exec-body">
-            <div class="meta-row">
-              ${sentiment ? `<span class="meta-tag">😊 ${sentiment}</span>` : ''}
-              ${categoria ? `<span class="meta-tag">📁 ${categoria}</span>` : ''}
-              ${prioridad ? `<span class="meta-tag">⚡ prioridad ${prioridad}</span>` : ''}
-            </div>
-            <div class="comment-box">
-              <div class="comment-label">Comentario recibido</div>
-              <div class="comment-text">${commentText}</div>
-            </div>
-            <div class="reply-box">
-              <div class="reply-label">✨ Respuesta sugerida por Claude</div>
-              <div class="reply-text">${replyText}</div>
-            </div>
-            <div class="actions">
-              <button class="btn-approve" onclick="respond('${exec.id}', 'aprobar', this)">✅ Aprobar y publicar</button>
-              <button class="btn-ignore" onclick="respond('${exec.id}', 'ignorar', this)">⏭ Ignorar</button>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
+    const now = new Date().toLocaleTimeString('es-CO');
+    const ri = document.getElementById('refreshInfo');
+    ri.style.display = 'block';
+    ri.textContent = `Última actualización: ${now}`;
 
   } catch(e) {
-    statusArea.innerHTML = `<div class="status error">❌ ${e.message}</div>`;
+    showStatus(`Error al conectar: ${e.message}. Verifica tu API key y URL de n8n.`, 'error');
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Cargar comentarios';
   }
 }
 
-async function respond(execId, action, btn) {
-  const card = document.getElementById(`card-${execId}`);
-  const buttons = card.querySelectorAll('button');
-  buttons.forEach(b => b.disabled = true);
-  btn.textContent = action === 'aprobar' ? '⏳ Publicando...' : '⏳ Procesando...';
+// ─── Aprobar ─────────────────────────────────────────────────────────────────
+async function approveComment(id) {
+  const c = commentsMap.get(id);
+  if (!c) return;
+
+  const replyEl = document.getElementById(`reply_${id}`);
+  const reply = replyEl ? replyEl.value : c.suggestedReply;
+
+  const btn = document.querySelector(`#card_${id} .btn-approve`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Publicando…'; }
+
+  const key = getApiKey();
+  const baseUrl = getN8nUrl();
 
   try {
-    const webhookUrl = `${N8N_URL}/webhook-waiting/${execId}&response=${action}`;
-    await fetch(PROXY + encodeURIComponent(webhookUrl));
-    card.innerHTML = `<div style="padding:20px;text-align:center;color:${action === 'aprobar' ? '#16a34a' : '#6b7280'};font-weight:600;font-size:15px">
-      ${action === 'aprobar' ? '✅ Respuesta publicada en YouTube' : '⏭ Comentario ignorado'}
-    </div>`;
-    setTimeout(() => card.remove(), 2000);
+    // Intentar llamar al webhook de publicación en n8n
+    if (key && baseUrl) {
+      const webhookUrl = `${baseUrl}/webhook/aprobar-comentario`;
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commentId: id, reply, videoId: c.videoId })
+      }).catch(() => {}); // No bloqueamos si falla el webhook
+    }
+
+    // ✅ CORRECCIÓN: actualizar estado localmente siempre
+    c.status = 'approved';
+    commentsMap.set(id, c);
+    saveState();
+    updateStats();      // ← actualiza los contadores inmediatamente
+    renderList();       // ← re-renderiza la lista
+    toast('✅ Comentario aprobado y publicado');
+
   } catch(e) {
-    buttons.forEach(b => b.disabled = false);
-    btn.textContent = action === 'aprobar' ? '✅ Aprobar y publicar' : '⏭ Ignorar';
+    if (btn) { btn.disabled = false; btn.textContent = '✅ Aprobar y publicar'; }
+    toast('Error al aprobar. Intenta de nuevo.');
   }
 }
 
-setInterval(loadExecutions, 60000);
+// ─── Ignorar ──────────────────────────────────────────────────────────────────
+function ignoreComment(id) {
+  const c = commentsMap.get(id);
+  if (!c) return;
+  c.status = 'ignored';
+  commentsMap.set(id, c);
+  saveState();
+  updateStats();   // ← actualiza contadores
+  renderList();    // ← re-renderiza
+  toast('⏭ Comentario ignorado');
+}
+
+// ─── Auto-refresh cada 5 minutos ─────────────────────────────────────────────
+setInterval(() => {
+  if (getApiKey() && getN8nUrl()) loadComments();
+}, 5 * 60 * 1000);
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+(function init() {
+  // Restaurar credenciales guardadas
+  const savedKey = localStorage.getItem('ea_n8n_key');
+  const savedUrl = localStorage.getItem('ea_n8n_url');
+  if (savedKey) document.getElementById('apiKeyInput').value = savedKey;
+  if (savedUrl) document.getElementById('n8nUrlInput').value = savedUrl;
+
+  // Restaurar estado previo (comentarios ya aprobados/ignorados)
+  loadState();
+
+  if (commentsMap.size > 0) {
+    updateStats();
+    renderList();
+    showStatus(`Estado restaurado — ${commentsMap.size} comentarios cargados.`, 'success');
+  } else {
+    updateStats();
+    renderList();
+  }
+})();
 </script>
 </body>
 </html>
