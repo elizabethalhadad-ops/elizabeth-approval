@@ -336,7 +336,6 @@
 
 <div class="config-bar">
   <input type="password" id="apiKeyInput" placeholder="n8n API key (ej: eyJhbG...)" autocomplete="off" />
-  <input type="text" id="n8nUrlInput" placeholder="URL de n8n (ej: https://tu-instancia.railway.app)" />
   <button class="btn-primary" id="loadBtn" onclick="loadComments()">Cargar comentarios</button>
 </div>
 
@@ -392,11 +391,9 @@ function loadState() {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+const N8N_BASE_URL = 'https://primary-production-72d4.up.railway.app';
 function getApiKey() { return document.getElementById('apiKeyInput').value.trim(); }
-function getN8nUrl() {
-  let url = document.getElementById('n8nUrlInput').value.trim();
-  return url.endsWith('/') ? url.slice(0,-1) : url;
-}
+function getN8nUrl() { return N8N_BASE_URL; }
 
 function showStatus(msg, type = 'info') {
   const el = document.getElementById('statusMsg');
@@ -570,12 +567,11 @@ function escHtml(s) {
 async function loadComments() {
   const key = getApiKey();
   const baseUrl = getN8nUrl();
-  if (!key || !baseUrl) {
-    showStatus('⚠️ Ingresa tu API key y la URL de n8n.', 'error');
+  if (!key) {
+    showStatus('⚠️ Ingresa tu API key de n8n.', 'error');
     return;
   }
   localStorage.setItem('ea_n8n_key', key);
-  localStorage.setItem('ea_n8n_url', baseUrl);
 
   const btn = document.getElementById('loadBtn');
   btn.disabled = true;
@@ -710,9 +706,7 @@ setInterval(() => {
 (function init() {
   // Restaurar credenciales guardadas
   const savedKey = localStorage.getItem('ea_n8n_key');
-  const savedUrl = localStorage.getItem('ea_n8n_url');
   if (savedKey) document.getElementById('apiKeyInput').value = savedKey;
-  if (savedUrl) document.getElementById('n8nUrlInput').value = savedUrl;
 
   // Restaurar estado previo (comentarios ya aprobados/ignorados)
   loadState();
