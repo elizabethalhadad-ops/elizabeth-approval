@@ -392,6 +392,7 @@ function loadState() {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const N8N_BASE_URL = 'https://primary-production-72d4.up.railway.app';
+const WEBHOOK_URL = 'https://primary-production-72d4.up.railway.app/webhook/comentarios-pendientes';
 function getApiKey() { return document.getElementById('apiKeyInput').value.trim(); }
 function getN8nUrl() { return N8N_BASE_URL; }
 
@@ -579,43 +580,24 @@ async function loadComments() {
   showStatus('Conectando con n8n…', 'info');
 
   try {
-    // Traer ejecuciones recientes del workflow
-    const resp = await fetch(`${baseUrl}/api/v1/executions?limit=50&status=success`, {
-      headers: {
-        'X-N8N-API-KEY': key,
-        'Accept': 'application/json'
-      }
+    // Traer comentarios via webhook (sin CORS)
+    const resp = await fetch(WEBHOOK_URL, {
+      headers: { 'Accept': 'application/json' }
     });
 
     if (!resp.ok) throw new Error(`Error ${resp.status}: ${resp.statusText}`);
     const data = await resp.json();
 
-    const executions = data.data || data.results || data || [];
+    const items = Array.isArray(data) ? data : (data.comentarios || data.data || []);
     let newCount = 0;
 
-    for (const exec of executions) {
-      // Extraer comentarios del resultado de la ejecución
-      const resultData = exec.data?.resultData?.runData;
-      if (!resultData) continue;
+    for (const item of items) {
+      const parsed = parseComment(item.json || item);
+      if (!parsed.id) continue;
 
-      // Buscar en todos los nodos del resultado
-      for (const nodeName of Object.keys(resultData)) {
-        const nodeResults = resultData[nodeName];
-        if (!Array.isArray(nodeResults)) continue;
-
-        for (const run of nodeResults) {
-          const items = run?.data?.main?.[0] || [];
-          for (const item of items) {
-            const parsed = parseComment(item.json || item);
-            if (!parsed.id) continue; // Sin ID no podemos deduplicar
-
-            if (!commentsMap.has(parsed.id)) {
-              commentsMap.set(parsed.id, { ...parsed, status: 'pending' });
-              newCount++;
-            }
-            // Si ya existe, no lo sobreescribimos (preserva estado aprobado/ignorado)
-          }
-        }
+      if (!commentsMap.has(parsed.id)) {
+        commentsMap.set(parsed.id, { ...parsed, status: 'pending' });
+        newCount++;
       }
     }
 
